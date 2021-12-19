@@ -1,10 +1,40 @@
 import tkinter as tk
 from tkinter.constants import *
 from werkzeug.security import generate_password_hash, check_password_hash
-import MySQLdb as mdb
+# import MySQLdb as mdb
+import sqlite3
 
 TEXTCOL = "white"
 BACKCOLF1 = "white"
+
+def create_db(conn):
+    try:
+        conn.execute('''CREATE TABLE IF NOT EXISTS Users
+            (users INT NOT NULL PRIMARY KEY,
+            Username TEXT ,
+            PassHash TEXT ,
+            ChinsesScore INT,
+            PolishScore INT,
+            NumberOfQuestions INT,
+            Rank INT
+            );''')
+
+        conn.execute('''CREATE TABLE IF NOT EXISTS ChineseWords (
+            WordID INT NOT NULL PRIMARY KEY,
+            English TEXT ,
+            Chinese TEXT,
+            Average INT);''')
+
+        conn.execute('''CREATE TABLE IF NOT EXISTS PolishWords (
+            WordID TEXT NOT NULL PRIMARY KEY,
+            English TEXT,
+            Chinese TEXT,
+            Average INT);''')
+            
+        conn.commit()
+        print("Table created successfully")
+    except:
+        pass
 def search():
     global frame1
     global frame2
@@ -18,6 +48,7 @@ def login():
     global pass_input
     global popup
     global LoginAttem
+    global usrnam
 
     ## Creates a popup for if the password is wrong
     popup = tk.Tk()
@@ -33,6 +64,13 @@ def login():
     B1.pack()
     popup.mainloop()
 
+def get_stats():
+    # Get the previous stats from the quizes
+    # Put the previous stats into a graph
+    return
+
+def start_quiz():
+    return
     ##
 def main():
     global frame1
@@ -41,6 +79,7 @@ def main():
     global pass_input
     global popup
     global LoginAttem
+    global usrnam
     win = tk.Tk()
     ## The app will have four main frames
     ## Frame 1 is login: have a welcome message and a username & password input 
@@ -55,6 +94,9 @@ def main():
     win.title("Palm Cards")
     win.geometry('500x500')
     # win.resizable(False,False)
+
+    usrnam = "USER"
+    quest_number_options=[5,10,15,20,25,40,50,100]
 
     #Frame1
     frame1 = tk.Frame(win, bg=BACKCOLF1)
@@ -86,8 +128,24 @@ def main():
     search_but.place(x=250,y=300)
 
     # Frame2
-    frame2 = tk.Frame(win, bg="white")
-    frame2.canvas = tk.Canvas(win,width=780,height=850)
+    
+    ## TODO get usrnam from database
+    frame2 = tk.Frame(win, bg=BACKCOLF1)
+    title_label = tk.Label(frame2,text = "Welcome "+usrnam, font=('courier',20), bg=TEXTCOL)
+    title_label.place(x=350, y=100)
+    title_label.pack(pady=10)
+
+    get_stat = tk.Button(frame2,text='Stats', width=12,command=get_stats)
+    get_stat.place(x=200,y=200)
+
+    start_quiz = tk.Button(frame2,text='Quiz', width=12,command=search)
+    start_quiz.place(x=160,y=300)
+
+    quiz_size = tk.IntVar()
+    num_quiz_quest = tk.OptionMenu(frame2,quiz_size,*quest_number_options)
+    num_quiz_quest.place(x=260,y=298)
+
+    
     # frame2.canvas.place(x=100,y=50)
 
     search_but = tk.Button(frame1,text='Search', width=12,command=search)
