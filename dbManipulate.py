@@ -148,6 +148,7 @@ def main():
         create_user(conn,("maxwell",generate_password_hash("password", method='sha256'),0,0,0,0))
     except sqlite3.IntegrityError:
         pass
+    
     # question_attempt(conn, "chinese", "'English'", INCORRECT)
     # insert_word(conn,"ChineseWords", "Things", "Englishs")
     

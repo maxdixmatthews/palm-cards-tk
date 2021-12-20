@@ -3,38 +3,16 @@ from tkinter.constants import *
 from werkzeug.security import generate_password_hash, check_password_hash
 # import MySQLdb as mdb
 import sqlite3
+import dbManipulate as db
+from tkinter import ttk
 
 TEXTCOL = "white"
 BACKCOLF1 = "white"
+INCORRECT = 0
+CORRECT = 1
+conn = sqlite3.connect('practice.db')
 
-def create_db(conn):
-    try:
-        conn.execute('''CREATE TABLE IF NOT EXISTS Users
-            (users INT NOT NULL PRIMARY KEY,
-            Username TEXT ,
-            PassHash TEXT ,
-            ChinsesScore INT,
-            PolishScore INT,
-            NumberOfQuestions INT,
-            Rank INT
-            );''')
 
-        conn.execute('''CREATE TABLE IF NOT EXISTS ChineseWords (
-            WordID INT NOT NULL PRIMARY KEY,
-            English TEXT ,
-            Chinese TEXT,
-            Average INT);''')
-
-        conn.execute('''CREATE TABLE IF NOT EXISTS PolishWords (
-            WordID TEXT NOT NULL PRIMARY KEY,
-            English TEXT,
-            Chinese TEXT,
-            Average INT);''')
-            
-        conn.commit()
-        print("Table created successfully")
-    except:
-        pass
 def search():
     global frame1
     global frame2
@@ -44,8 +22,8 @@ def search():
 def login():
     global frame1
     global frame2
-    global user_input
     global pass_input
+    global user_input
     global popup
     global LoginAttem
     global usrnam
@@ -54,9 +32,29 @@ def login():
     popup = tk.Tk()
     popup.title("Popup")
     popup.geometry('180x100')
-    LoginAttem = ""
-    LoginAttem = "Incorrect password" + '\n'
-    popupLab = tk.Label(popup,text = LoginAttem, font=('courier',10))
+
+    cleanUserName = str(user_input.get())
+    print("User is {}".format(cleanUserName))
+    errString=""
+    print("Pass is {}".format(pass_input.get()))
+    #TODO make sure to stop SQL injection in cleanUserName
+    if len(cleanUserName) < 5:
+        errString = "Enter a valid Username"
+    
+    try:
+        cur = conn.cursor()
+        sqlGetUsername = '''SELECT PassHash FROM Users WHERE Username = '{}' '''.format(cleanUserName)
+        cur.execute(sqlGetUsername)
+        passHash = cur.fetchone()[0]
+        conn.commit()
+    except:
+        errString = "Enter a valid Username: not in database"
+
+    if check_password_hash(passHash, pass_input.get()):
+        errString = "Welcome {}!".format(cleanUserName)
+    else:
+        errString += " Incorrect Password"
+    popupLab = tk.Label(popup,text = errString + '\n', font=('courier',10))
     popupLab.place(x=20,y=20)
     popupLab.pack()
     B1 = tk.Button(popup, text="Close", command = popup.destroy)
@@ -112,7 +110,7 @@ def main():
     username.place(x=500, y=150)
     username.pack()
     user_input = tk.StringVar()
-    input_usr = tk.Entry(frame1,textvariable=user_input,text="Username...")
+    input_usr = tk.Entry(frame1,textvariable=user_input)
     input_usr.place(x=300, y=150)
     input_usr.pack()
 
