@@ -5,42 +5,44 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import numpy as np
 import pandas as pd
+import mysql.connector
+from decouple import config
 
 INCORRECT = 0
 CORRECT = 1
 INITCOLNUM = 6
 
 def create_db(conn):
-    try:
-        conn.execute('''CREATE TABLE IF NOT EXISTS Users
-            (Username TEXT NOT NULL PRIMARY KEY,
+    # try:
+        cur = conn.cursor()
+        cur.execute('''CREATE TABLE IF NOT EXISTS Users(
+            Username TEXT NOT NULL PRIMARY KEY,
             PassHash TEXT ,
             ChinsesScore INT,
             PolishScore INT,
             NumberOfQuestions INT,
-            Rank INT
-            );''')
+            Rank INT)''')
 
-        conn.execute('''CREATE TABLE IF NOT EXISTS ChineseWords (
+        cur.execute('''CREATE TABLE IF NOT EXISTS ChineseWords (
             WordID TEXT NOT NULL PRIMARY KEY,
             Chinese TEXT,
             CorrectAttempts INT,
             WrongAttempts INT,
             Average INT
-            );''')
+            )''')
 
-        conn.execute('''CREATE TABLE IF NOT EXISTS PolishWords (
+        cur.execute('''CREATE TABLE IF NOT EXISTS PolishWords (
             WordID TEXT NOT NULL PRIMARY KEY,
             Polish TEXT,
             CorrectAttempts INT,
             WrongAttempts INT,
             Average INT
-            );''')
+            )''')
             
         conn.commit()
         print("Table created successfully")
-    except:
-        pass
+    # except:
+    #     pass
 
 def create_user(conn, userInfo):
     sql = ''' INSERT INTO Users(Username,PassHash,ChinsesScore,PolishScore,NumberOfQuestions,Rank) VALUES(?,?,?,?,?,?)'''
@@ -142,16 +144,24 @@ def excel_to_sql(conn, filename):
 
 
 def main():
-    conn = sqlite3.connect('practice.db')
+    # conn = sqlite3.connect('practice.db')
+    conn = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password=config('PASS'),
+    database = "learnLang"
+    )
+
     create_db(conn)
     try:
-        create_user(conn,("maxwell",generate_password_hash("password", method='sha256'),0,0,0,0))
+        create_user(conn,("maxwell2",generate_password_hash("password", method='sha256'),0,0,0,0))
     except sqlite3.IntegrityError:
         pass
-    # question_attempt(conn, "chinese", "'English'", INCORRECT)
-    # insert_word(conn,"ChineseWords", "Things", "Englishs")
     
-    # question_attempt(conn, "ChineseWords", """Thingo""", CORRECT,"maxwell")
+    question_attempt(conn, "chinese", "'English'", INCORRECT)
+    insert_word(conn,"ChineseWords", "Things", "Englishs")
+    
+    question_attempt(conn, "ChineseWords", """Thingo""", CORRECT,"maxwell")
 
     excel_to_sql(conn,"l")
 if __name__ == '__main__':
