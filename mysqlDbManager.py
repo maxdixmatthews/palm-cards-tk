@@ -16,24 +16,24 @@ def create_db(conn):
     # try:
         cur = conn.cursor()
         cur.execute('''CREATE TABLE IF NOT EXISTS Users(
-            Username TEXT NOT NULL PRIMARY KEY,
-            PassHash TEXT ,
+            Username VARCHAR(255) PRIMARY KEY,
+            PassHash TEXT(255),
             ChinsesScore INT,
             PolishScore INT,
             NumberOfQuestions INT,
-            Rank INT)''')
+            Ranking INT)''')
 
-        cur.execute('''CREATE TABLE IF NOT EXISTS ChineseWords (
-            WordID TEXT NOT NULL PRIMARY KEY,
-            Chinese TEXT,
-            CorrectAttempts INT,
-            WrongAttempts INT,
-            Average INT
+        cur.execute('''CREATE TABLE IF NOT EXISTS ChineseWords(
+            WordID VARCHAR(255) PRIMARY KEY,
+            Chinese TEXT(255),
+            CorrectAttempts INT(255),
+            WrongAttempts INT(255),
+            Average INT(255)
             )''')
 
-        cur.execute('''CREATE TABLE IF NOT EXISTS PolishWords (
-            WordID TEXT NOT NULL PRIMARY KEY,
-            Polish TEXT,
+        cur.execute('''CREATE TABLE IF NOT EXISTS PolishWords(
+            WordID VARCHAR(255) PRIMARY KEY,
+            Polish TEXT(255),
             CorrectAttempts INT,
             WrongAttempts INT,
             Average INT
@@ -45,7 +45,7 @@ def create_db(conn):
     #     pass
 
 def create_user(conn, userInfo):
-    sql = ''' INSERT INTO Users(Username,PassHash,ChinsesScore,PolishScore,NumberOfQuestions,Rank) VALUES(?,?,?,?,?,?)'''
+    sql = ''' INSERT INTO Users(Username,PassHash,ChinsesScore,PolishScore,NumberOfQuestions,Ranking) VALUES(%s, %s, %s, %s, %s, %s)'''
     cur = conn.cursor()
     cur.execute(sql, userInfo)
     conn.commit()
@@ -77,10 +77,10 @@ def question_attempt(conn, lang, word, scoreOnQu, userName):
     else: lang = "PolishWords"
     lang = "ChineseWords"
     cur = conn.cursor()  
-    cur.execute("UPDATE {} SET {} ={}+1 WHERE WordID ='{}'".format(lang,score,score,word))
+    cur.execute("UPDATE {} SET {} ={}+1 WHERE WordID = '{}'".format(lang,score,score,word))
 
     cur2 = conn.cursor()
-    cur2.execute("UPDATE {} SET {} = {} WHERE WordID ='{}'".format(lang,userName,int(scoreOnQu),word))
+    cur2.execute("UPDATE {} SET {} = {} WHERE WordID = '{}'".format(lang,userName,int(scoreOnQu),word))
     # print("UPDATE {} SET {} = {}+1 WHERE WordID ={}".format(lang,score,score,word))
     conn.commit()
 
@@ -111,11 +111,11 @@ def insert_word(conn, lang, word, transWord):
         '' + i[0]+ ''
         sql += ''','''+ i[0]
     sql += ''')'''
-    valSql = '''VALUES(?,?,?,?'''
+    valSql = '''VALUES(%s,%s,%s,%s'''
 
     for i in range(result+1):
         originalSql.append(0)
-        valSql += ''',?'''
+        valSql += ''',%s'''
     valSql += ''')'''
     sql +=valSql
     # originalSql = [word,transWord,0,0,0]
@@ -139,7 +139,7 @@ def excel_to_sql(conn, filename):
     for word in tupWords:
         try:
             insert_word(conn, "ChineseWord", word[0], word[1])
-        except sqlite3.IntegrityError:
+        except mysql.connector.errors.IntegrityError:
             pass
 
 
@@ -147,6 +147,7 @@ def main():
     # conn = sqlite3.connect('practice.db')
     conn = mysql.connector.connect(
     host="localhost",
+    # host=config('IP'),
     user="root",
     password=config('PASS'),
     database = "learnLang"
@@ -154,15 +155,16 @@ def main():
 
     create_db(conn)
     try:
-        create_user(conn,("maxwell2",generate_password_hash("password", method='sha256'),0,0,0,0))
-    except sqlite3.IntegrityError:
+        create_user(conn,("maxwell",generate_password_hash("password", method='sha256'),0,0,0,0))
+    except mysql.connector.errors.IntegrityError:
+        print("didnt work")
         pass
-    
-    question_attempt(conn, "chinese", "'English'", INCORRECT)
-    insert_word(conn,"ChineseWords", "Things", "Englishs")
-    
-    question_attempt(conn, "ChineseWords", """Thingo""", CORRECT,"maxwell")
 
-    excel_to_sql(conn,"l")
+    insert_word(conn,"ChineseWords", "English", "Chinese")
+    question_attempt(conn, "chinese", "English", INCORRECT,"maxwell")
+    insert_word(conn,"ChineseWords", "Thingo", "Englishs")
+    question_attempt(conn, "ChineseWords", "Thingo", CORRECT,"maxwell")
+
+    # excel_to_sql(conn,"l")
 if __name__ == '__main__':
     main()

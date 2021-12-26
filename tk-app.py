@@ -5,13 +5,19 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import dbManipulate as db
 from tkinter import ttk
+import matplotlib.pyplot as plt
+from tkinter import * 
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, 
+NavigationToolbar2Tk)
 
 TEXTCOL = "white"
 BACKCOLF1 = "white"
 INCORRECT = 0
 CORRECT = 1
 conn = sqlite3.connect('practice.db')
-
+AuthUser = "" 
+Authenticated = FALSE
 
 def search():
     global frame1
@@ -27,6 +33,8 @@ def login():
     global popup
     global LoginAttem
     global usrnam
+    global AuthUser
+    global Authenticated
 
     ## Creates a popup for if the password is wrong
     popup = tk.Tk()
@@ -34,9 +42,7 @@ def login():
     popup.geometry('180x100')
 
     cleanUserName = str(user_input.get())
-    print("User is {}".format(cleanUserName))
     errString=""
-    print("Pass is {}".format(pass_input.get()))
     #TODO make sure to stop SQL injection in cleanUserName
     if len(cleanUserName) < 5:
         errString = "Enter a valid Username"
@@ -52,11 +58,20 @@ def login():
 
     if check_password_hash(passHash, pass_input.get()):
         errString = "Welcome {}!".format(cleanUserName)
+        AuthUser = cleanUserName
+        Authenticated = TRUE
     else:
         errString += " Incorrect Password"
+
+    # TODO: Change frames after a successfull login
     popupLab = tk.Label(popup,text = errString + '\n', font=('courier',10))
     popupLab.place(x=20,y=20)
     popupLab.pack()
+    if Authenticated:
+        frame1.pack_forget()
+        frame2.pack(anchor=N,fill=BOTH, expand=True, side=LEFT)
+        print(AuthUser)
+
     B1 = tk.Button(popup, text="Close", command = popup.destroy)
     B1.place(x=20,y=80)
     B1.pack()
@@ -78,6 +93,8 @@ def main():
     global popup
     global LoginAttem
     global usrnam
+    global AuthUser
+
     win = tk.Tk()
     ## The app will have four main frames
     ## Frame 1 is login: have a welcome message and a username & password input 
@@ -118,7 +135,7 @@ def main():
     password.place(x=200, y=250)
     password.pack()
     pass_input = tk.StringVar()
-    input_pass = tk.Entry(frame1,textvariable=pass_input)
+    input_pass = tk.Entry(frame1,textvariable=pass_input,show="*")
     input_pass.place(x=300, y=150)
     input_pass.pack()
 
@@ -127,9 +144,8 @@ def main():
 
     # Frame2
     
-    ## TODO get usrnam from database
     frame2 = tk.Frame(win, bg=BACKCOLF1)
-    title_label = tk.Label(frame2,text = "Welcome "+usrnam, font=('courier',20), bg=TEXTCOL)
+    title_label = tk.Label(frame2,text = "Welcome "+ AuthUser, font=('courier',20), bg=TEXTCOL)
     title_label.place(x=350, y=100)
     title_label.pack(pady=10)
 
@@ -143,12 +159,35 @@ def main():
     num_quiz_quest = tk.OptionMenu(frame2,quiz_size,*quest_number_options)
     num_quiz_quest.place(x=260,y=298)
 
-    
     # frame2.canvas.place(x=100,y=50)
 
-    search_but = tk.Button(frame1,text='Search', width=12,command=search)
-    search_but.place(x=100,y=300)
-    frame1.pack(anchor=N,fill=BOTH, expand=True, side=LEFT)
+    # search_but = tk.Button(frame1,text='Search', width=12,command=search)
+    # search_but.place(x=100,y=300)
+
+    # Frame3
+    frame3 = tk.Frame(win, bg=BACKCOLF1)
+    title_label = tk.Label(frame3,text = "Statistics for Max"+ AuthUser, font=('courier',20), bg=TEXTCOL)
+    title_label.place(x=350, y=100)
+    title_label.pack(pady=10)
+
+    figChinese = plt.figure(figsize = (5, 5), dpi = 20)
+    ax = figChinese.add_axes([0,0,1,1])
+    scoreNames = ['Your Score','Average']
+    scores = [4,15]
+    ax.bar(scoreNames,scores)
+    canvas = FigureCanvasTkAgg(figChinese, master = frame3)
+    canvas.draw()
+    # placing the canvas on the Tkinter window
+    canvas.get_tk_widget().pack()
+    toolbar = NavigationToolbar2Tk(canvas,frame3)
+    toolbar.update()
+  
+    # placing the toolbar on the Tkinter window
+    canvas.get_tk_widget().pack()
+
+
+
+    frame3.pack(anchor=N,fill=BOTH, expand=True, side=LEFT)
     win.mainloop()
 
 
