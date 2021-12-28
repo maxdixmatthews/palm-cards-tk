@@ -3,19 +3,29 @@ from tkinter.constants import *
 from werkzeug.security import generate_password_hash, check_password_hash
 # import MySQLdb as mdb
 import sqlite3
-import dbManipulate as db
+import mysqlDbManager as db
 from tkinter import ttk
 import matplotlib.pyplot as plt
 from tkinter import * 
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, 
 NavigationToolbar2Tk)
+import mysql.connector
+from decouple import config
+
 
 TEXTCOL = "white"
 BACKCOLF1 = "white"
 INCORRECT = 0
 CORRECT = 1
-conn = sqlite3.connect('practice.db')
+conn = mysql.connector.connect(
+    host="localhost",
+    # host=config('IP'),
+    user="root",
+    password=config('PASS'),
+    database = "learnLang"
+    )
+
 AuthUser = "" 
 Authenticated = FALSE
 
@@ -164,11 +174,14 @@ def main():
     # search_but = tk.Button(frame1,text='Search', width=12,command=search)
     # search_but.place(x=100,y=300)
 
-    # Frame3
+    # Frame3 Statistics
     frame3 = tk.Frame(win, bg=BACKCOLF1)
     title_label = tk.Label(frame3,text = "Statistics for Max"+ AuthUser, font=('courier',20), bg=TEXTCOL)
     title_label.place(x=350, y=100)
     title_label.pack(pady=10)
+
+    chinesePercent = 0
+    chinesePercent = db.get_lang_score(conn, "chinese", AuthUser)
 
     figChinese = plt.figure(figsize = (5, 5), dpi = 20)
     ax = figChinese.add_axes([0,0,1,1])
@@ -185,9 +198,7 @@ def main():
     # placing the toolbar on the Tkinter window
     canvas.get_tk_widget().pack()
 
-
-
-    frame3.pack(anchor=N,fill=BOTH, expand=True, side=LEFT)
+    frame1.pack(anchor=N,fill=BOTH, expand=True, side=LEFT)
     win.mainloop()
 
 
