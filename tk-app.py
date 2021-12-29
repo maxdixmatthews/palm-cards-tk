@@ -194,6 +194,14 @@ def main():
     canvas.get_tk_widget().pack()
     toolbar = NavigationToolbar2Tk(canvas,frame3)
     toolbar.update()
+    
+    #Frame 4 Quiz frame
+    # TODO: buttons for polish/english KYLEE
+    # TODO: buttons for words user doesn't know KYLEE
+    # TODO: in quiz have a counter of how many you have correct KYLEE
+    # TODO: have a way to reverse the words: english chinese KYLEE
+    # TODO: leaderboard with ranking MAX
+    # TODO: 
   
     # placing the toolbar on the Tkinter window
     canvas.get_tk_widget().pack()
