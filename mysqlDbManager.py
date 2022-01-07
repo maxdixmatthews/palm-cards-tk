@@ -7,6 +7,11 @@ import numpy as np
 import pandas as pd
 import mysql.connector
 from decouple import config
+from sshtunnel import SSHTunnelForwarder
+# import MySQLdb as db
+import pymysql
+pymysql.install_as_MySQLdb()
+
 
 INCORRECT = 0
 CORRECT = 1
@@ -174,13 +179,34 @@ def get_lang_score(conn, lang, username):
 
 def main():
     # conn = sqlite3.connect('practice.db')
-    conn = mysql.connector.connect(
-    host="localhost",
-    # host=config('IP'),
-    user="root",
-    password=config('PASS'),
-    database = "learnLang"
-    )
+    # conn = mysql.connector.connect(
+    # host="localhost",
+    # # host=config('IP'),
+    # user="root",
+    # password=config('PASS'),
+    # database = "learnLang"
+    # )
+
+    host = '13.236.95.148'
+    localhost = '127.0.0.1'
+    ssh_username = 'ubuntu'
+    ss_private_key = '/Users/maxdi/OneDrive/Desktop/Website/test.key'
+
+    user='user'
+    password=config('PASS')
+    database="learnLang"
+
+    with SSHTunnelForwarder(
+        (host, 22),
+        ssh_username=ssh_username,
+        ssh_private_key=ss_private_key,
+        remote_bind_address=(localhost, 3306)
+    ) as server:
+        conn = db.connect(host=localhost,
+                               port=server.local_bind_port,
+                               user=user,
+                               passwd=password,
+                               db=database)
 
     create_db(conn)
     try:
@@ -188,6 +214,8 @@ def main():
     except mysql.connector.errors.IntegrityError:
         print("didnt work")
         pass
+
+    create_user(conn,("max",generate_password_hash("Language123!", method='sha256'),0,0,0,0))
     
     # excel_to_sql(conn,"l")
     # insert_word(conn,"ChineseWords", "English", "Chinese")
